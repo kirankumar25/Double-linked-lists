@@ -11,92 +11,138 @@ typedef struct LinkedListNode LinkedListNode;
 struct LinkedListNode {
 	int val;
 	struct LinkedListNode* next;
+	struct LinkedListNode* prev;
 };
 
 
 //-------------------- body of the code ------------------------
 
 
-LinkedListNode* insertAtBeginning(LinkedListNode* tail, int val) {
-        LinkedListNode *p=(LinkedListNode*)malloc(sizeof(LinkedListNode));
-        p->val=val;
-        p->next=NULL;
-        if(tail==NULL)
+LinkedListNode* insertAtBeginning(LinkedListNode* head, int val) {
+        LinkedListNode *node=(LinkedListNode*)malloc(sizeof(LinkedListNode));
+        node->val=val;
+        node->next=NULL;
+        node->prev=NULL;
+        if(head==NULL)
         {
-            tail=p;
-            tail->next=tail;
+            head=node;
+            node->next=NULL;
         }
         else
         {
-            p->next=tail->next;
-            tail->next=p;
+            node->next=head;
+            if(head){
+                head->prev=node;
+                head=node;
+            }
         }
-    return tail;
+    return head;
 }
-LinkedListNode* insertAtEnd(LinkedListNode* tail, int val) {
-        LinkedListNode *p=(LinkedListNode*)malloc(sizeof(LinkedListNode));
-        p->val=val;
-        if(tail==NULL)
+LinkedListNode* insertAtEnd(LinkedListNode* head, int val) {
+         LinkedListNode *node=(LinkedListNode*)malloc(sizeof(LinkedListNode));
+        node->val=val;
+        node->next=NULL;
+        node->prev=NULL;
+        LinkedListNode *p=head;
+        if(head==NULL)
         {
-            p->next=p;
-            tail=p;
+           head=node;
+            return head;
         }
-        else
-        {
-            p->next=tail->next;
-            tail->next=p;
-            tail=p;
-            //tail=p;
-        }
-    return tail;
+       else
+       {
+           while(p->next)
+               p=p->next;
+           p->next=node;
+           node->prev=p;
+       }
+    return head;
 }
-LinkedListNode* deleteAtBeginning(LinkedListNode* tail) {
-        if(tail==NULL)
-            return tail;
-        if(tail->next==tail)
+LinkedListNode* insertAtPosition(LinkedListNode* head, int val, int pos) {
+         LinkedListNode *node=(LinkedListNode*)malloc(sizeof(LinkedListNode));
+        node->val=val;
+        node->next=NULL;
+        node->prev=NULL;
+        if(pos==1 )
         {
-            tail=NULL;
-            LinkedListNode *p=tail;
+            return insertAtBeginning(head,val);
+        }
+       LinkedListNode *temp=head;
+       pos--;
+         while(pos-1)
+           {
+               temp=temp->next;
+               if(temp==NULL)
+                   return head;
+               pos--;
+           }
+         if(temp->next==NULL)
+             return insertAtEnd(head,val);
+         else{
+           node->next=temp->next;
+           temp->next->prev=node;
+           node->prev=temp;
+           temp->next=node;
+         }
+     return   head;
+}
+LinkedListNode* deleteAtBeginning(LinkedListNode* head) {
+        if(head==NULL)
+            return NULL;
+       LinkedListNode *p=head;
+            head=head->next;
+            if(head)
+            head->prev=NULL;
             free(p);
-            return NULL;
-        }
-        else
+    return head;
+}
+LinkedListNode* deleteAtEnd(LinkedListNode* head) {
+    LinkedListNode *temp=head;
+    if(head==NULL)
+        return NULL;
+    if(head->next==NULL)
+        return NULL;
+    else
+    {
+        while(temp->next->next)
+            temp=temp->next;
+        temp->next=NULL;
+    }
+    return head;
+}
+LinkedListNode* deleteAtPosition(LinkedListNode* head, int pos) {
+       if(head==NULL)return NULL; 
+       if(pos==1)
         {
-            LinkedListNode *u=tail->next;
-            tail->next=tail->next->next;
-            free(u);
-            return tail;
+           return  deleteAtBeginning(head);
         }
+        pos--;
+         LinkedListNode *p=head;
+            while(pos-1)
+            {
+                p=p->next;
+                if(p==NULL)
+                    return head;
+                pos--;
+            }
+    if(p->next==NULL)return head;
+    if(p->next->next==NULL)
+    {
+        deleteAtEnd(head);
+    }
+    else
+    {
+        LinkedListNode *r=p->next;
+        free(r);
+        p->next=p->next->next;
+        p->next->prev=p;
+    }
+    return head;
 }
-LinkedListNode* deleteAtEnd(LinkedListNode* tail) {
-        if(tail==NULL)
-            return NULL;
-        if(tail->next==tail)
-            return NULL;
-         LinkedListNode *t=tail->next;
-         if(t->next==tail->next)
-                return NULL;
-        while(t->next!=tail)
-            t=t->next;
-        t->next=tail->next;
-        free(tail);
-        tail=t;
-    return (tail);
-}
-
 
 //-------------------- tail of the code ------------------------
 
-void printForward(LinkedListNode* head) {
-	if (head == NULL) return;
-	printf("%d ", head->val);
-	printForward(head->next);
-}
-void printBackward(LinkedListNode* head) {
-	if (head == NULL) return;
-	printBackward(head->next);
-	printf("%d ", head->val);
-}
+
 int rng(int lim) {
 	if (lim == 0) return 0;
 	return rand()%lim;
@@ -117,16 +163,27 @@ void erasee(int pos) {
 	for (int i = pos; i <= sz; i++)
 		a[i] = a[i + 1];
 }
-int check(LinkedListNode* tail) {
-	if (tail == NULL && sz == 0) return 1;
-	if (tail == NULL || sz == 0) return 0;
-	if (tail->val != a[sz]) return 0;
-	LinkedListNode* ii = tail->next;
-	for (int i = 1; i < sz; i++) {
-		if (ii == NULL) return 0;
-		if (a[i] != ii->val) return 0;
-		ii = ii->next;
+int check(LinkedListNode* head) {
+	if (head == NULL && sz == 0) return 1;
+	if (head == NULL || sz == 0) return 0;
+	LinkedListNode* node = head;
+	for (int i = 1; i <= sz; i++) {
+		if (node == NULL) return 0;
+		if (node->val != a[i]) return 0;
+		node = node->next;
+	}	
+	if (node != NULL) return 0;
+
+	node = head;
+	while (node->next)
+		node = node->next;
+
+	for (int i = sz; i >= 1; i--) {
+		if (node == NULL) return 0;
+		if (node->val != a[i]) return 0;
+		node = node->prev;
 	}
+	if (node != NULL) return 0;
 	return 1;
 }
 int main() {
@@ -136,7 +193,7 @@ int main() {
 		LinkedListNode* head = NULL;
 		sz = 0;
 		for (int i = 0; i < n; i++) {
-			int type = rng(4);
+			int type = rng(6);
 			if (type == 0) {
 				int val = rng(1000);
 				head = insertAtBeginning(head, val);
@@ -158,6 +215,17 @@ int main() {
 			}
 
 			if (type == 2) {
+				int val = rng(1000);
+				int pos = rng(sz + 1) + 1;
+				head = insertAtPosition(head, val, pos);
+				insertt(val, pos);
+				if (!check(head)) {
+					printf("incorrect insertAtPosition");
+					return 0;
+				}
+			}
+
+			if (type == 3) {
 				head = deleteAtBeginning(head);
 				erasee(1);
 				if (!check(head)) {
@@ -166,11 +234,21 @@ int main() {
 				}
 			}
 
-			if (type == 3) {
+			if (type == 4) {
 				head = deleteAtEnd(head);
 				erasee(sz);
 				if (!check(head)) {
 					printf("incorrect deleteAtEnd");
+					return 0;
+				}
+			}
+
+			if (type == 5) {
+				int pos = rng(sz)+1;
+				head = deleteAtPosition(head, pos);
+				erasee(pos);
+				if (!check(head)) {
+					printf("incorrect deleteAtPosition");
 					return 0;
 				}
 			}
